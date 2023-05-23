@@ -1,0 +1,88 @@
+[project]
+name = "sokodoko"
+version = "0.1.0"
+description = "SokoDoko Bot project"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {file = "LICENSE"}
+keywords = ["python", "telegram", "bot"]
+authors = [
+    {name = "Nikolay Shishov", email = "nikolay.shishov@gmail.com"}
+]
+classifiers = [
+    "Programming Language :: Python"
+]
+
+dependencies = [
+    "pyTelegramBotAPI ~= 4.12.0",
+    "sanic ~= 23.3.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff >= 0.0.269",
+    "black >= 23.3.0",
+    "isort >= 5.12.0"
+]
+
+[project.urls]
+repository = "https://github.com/nickosh/sokodoko"
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # The following are specific to Black, you probably don't want those.
+  | external
+  | internal
+  | migrations
+  | node_modules
+  | template
+  | templates
+  | thirdparty
+)/
+'''
+skip-string-normalization = true
+quiet = true
+
+[tool.isort]
+combine_as_imports = true
+line_length = 88
+profile = "black"
+src_paths = ["."]
+
+[tool.ruff]
+select = [
+  "I",   # iSort
+  "F",   # PyFlakes
+  "E",   # pycodestyle
+  "W",   # Warning
+  "N",   # pep8-naming
+  "YTT", # flake8-2020
+  "B",   # flake8-bugbear
+  "A",   # flake8-builtins
+  "C4",  # flake8-comprehensions
+  "T10", # flake8-debugger
+  "PT",  # flake8-pytest-style
+  "RET", # flake8-return
+  "SIM", # flake8-simplify
+  "TID", # flake8-tidy-imports
+  "ARG", # flake8-unused-arguments
+  "PTH", # flake8-use-pathlib
+  "ERA", # eradicate
+  "PLC", # Pylint Convention
+  "PLE", # Pylint Error
+  "PLR", # Pylint Refactor
+  "PLW", # Pylint Warning
+  "RUF", # Ruff-specific rules
+]
+
+ignore = [
+  "PLR0913", # Too many arguments to function call
+  "I001", # Import block is un-sorted or un-formatted
+  "RET505", # Unnecessary `else` after `return` statement
+  "E501", # Line too long
+  "E999", # Syntax Error as it doesnt understand match commands from Python 3.10+
+]

@@ -1,0 +1,16 @@
+{
+    "name": "SokoDoko Bot",
+    "dockerComposeFile": "../docker-compose.dev.yml",
+    "service": "sokodoko",
+    "workspaceFolder": "/app",
+    "postCreateCommand": "sh .devcontainer/postCreateCommand.sh",
+    "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "njpwerner.autodocstring",
+        "shardulm94.trailing-spaces",
+        "redhat.vscode-yaml",
+        "visualstudioexptteam.vscodeintellicode",
+        "christian-kohler.path-intellisense",
+    ]
+}
