@@ -9,6 +9,6 @@ COPY pyproject.toml ./
 
 RUN apk add --update --no-cache make gcc musl-dev libffi-dev openssl-dev build-base zlib zlib-dev openssl-dev git openssh && \
     pip install pip --upgrade && \
-    pip install .
+    pip install -e .
 
-#ENTRYPOINT ["python", "main.py"]
+# ENTRYPOINT ["python", "main.py"]

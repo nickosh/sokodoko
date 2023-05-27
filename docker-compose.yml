@@ -1,0 +1,18 @@
+services:
+    sokodoko:
+        build: .
+        container_name: "sokodoko"
+        restart: "always"
+        labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.sokodoko.rule=Host(`site.com`)"
+        - "traefik.http.routers.sokodoko.entrypoints=e_https"
+        - "traefik.http.routers.sokodoko.tls=true"
+        - "traefik.http.routers.sokodoko.tls.certresolver=letsencryptresolver"
+        - "traefik.http.services.sokodoko.loadbalancer.server.port=80"
+        networks:
+        - web
+
+networks:
+  web:
+    external: true

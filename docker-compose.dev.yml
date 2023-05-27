@@ -6,13 +6,8 @@ services:
             - "8092:443"
         volumes:
             - ./:/app
-            - "sokodoko_data:/app/src/sokodoko/data"
             - $SSH_AUTH_SOCK:/ssh-agent
         environment:
             SSH_AUTH_SOCK: /ssh-agent
         stdin_open: true
         tty: true
-
-volumes:
-    sokodoko_data:
-        driver: local

@@ -1,4 +1,4 @@
-from configparser import ConfigParser
+from configparser import ConfigParser, SectionProxy
 from pathlib import Path
 
 from logger import LoggerHandler
@@ -10,12 +10,10 @@ workdir: Path = Path(__file__).resolve().parents[0]
 datadir: Path = Path(workdir, "data")
 datadir.mkdir(exist_ok=True)
 
-
-def config_init():
-    global config, config_path
-
+def config_init() -> tuple[ConfigParser, Path]:
     config: ConfigParser = ConfigParser()
     config_path: Path = Path(workdir, "config.ini")
+    print(config_path.resolve())
     if config_path.exists():
         config.read(config_path)
     else:
@@ -23,20 +21,21 @@ def config_init():
         log.error(msg)
         raise EnvironmentError(msg)
 
+    return config, config_path
 
-def config_load():
+
+def config_load(config: ConfigParser) -> SectionProxy:
     if config:
-        global cfg_bot
-        cfg_bot: dict = config["bot"]
+        return config["bot"]
+    raise EnvironmentError("Can't load bot config!")
 
 
 def config_save():
     with config_path.open("w") as configfile:
         config.write(configfile)
 
-
-config_init()
-config_load()
+config, config_path = config_init()
+cfg_bot = config_load(config)
 
 try:
     BOT_TOKEN: str = cfg_bot["bot_api_key"]
