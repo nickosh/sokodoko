@@ -4,7 +4,9 @@ from telebot.async_telebot import AsyncTeleBot
 from sanic.response import json, JSONResponse
 from sanic.request import Request
 from typing import Optional
+from urllib.parse import quote
 import re
+from sanic_ext import Extend
 
 from sokodoko.config import BOT_ADMIN, BOT_TOKEN, WEB_HOST
 from sokodoko.logger import LoggerHandler
@@ -17,6 +19,8 @@ bot = AsyncTeleBot(BOT_TOKEN)
 server = Sanic("SokoDoko")
 # server.static("/.well-known", Path(staticdir, ".well-known"))
 log: LoggerHandler = LoggerHandler(__name__)
+Extend(server)
+server.config.LOGGING = True
 
 # Telegram bot
 @bot.message_handler(regexp=google_maps_pattern)
@@ -30,14 +34,15 @@ async def start(message:Message):
         map_url = map_url.group()
     comment = re.sub(hashtag_pattern, "", text)
     comment = re.sub(google_maps_pattern, "", comment)
+    comment = comment.strip()
 
-    answer_msg: str = f"Thank you, dear {message.from_user.full_name}/n/nGoogle Maps link: {map_url}/n/nTags: {tags}/n/nCommentary:/n{comment}"
+    answer_msg: str = f"Thank you, dear {message.from_user.full_name}\n\nGoogle Maps link: {map_url}\n\nTags: {tags}\n\nCommentary:\n{comment}"
     await bot.reply_to(message, answer_msg)
 
 # Webserver
 @server.route(f"/wh{BOT_TOKEN}", methods=["POST"])
 async def webhook(request: Request) -> JSONResponse:
-    if request.body is None:
+    if request.json is None:
         return json({"status": "bad request"}, 400)
     log.debug(f"WH body incoming: {request.json}")
     update: Optional[Update] = Update.de_json(request.json)
@@ -55,12 +60,14 @@ async def before_start(app, loop):
 
 @server.listener("after_server_start")
 async def after_start(app, loop):
-    await bot.set_webhook(url=f"https://{WEB_HOST}/wh{BOT_TOKEN}")
+    await bot.set_webhook(url=f"https://{quote(WEB_HOST)}/wh{quote(BOT_TOKEN)}")
+    log.debug(await bot.get_webhook_info())
     if BOT_ADMIN:
         await bot.send_message(BOT_ADMIN, "BOT STARTED")
 
 
 @server.listener("before_server_stop")
 async def before_stop(app, loop):
+    await bot.remove_webhook()
     if BOT_ADMIN:
         await bot.send_message(BOT_ADMIN, "BOT FINISHED")

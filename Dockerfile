@@ -1,14 +1,12 @@
 FROM python:3.11.3-alpine3.18
 
-VOLUME [ "/app"]
+RUN mkdir /app
 WORKDIR /app
 
-EXPOSE 80
+COPY ./ /app
 
-COPY pyproject.toml ./
+RUN apk add --no-cache --virtual .build-deps gcc python3-dev musl-dev alpine-sdk
+RUN pip install -e .
+RUN pip install pytelegrambotapi --upgrade
 
-RUN apk add --update --no-cache make gcc musl-dev libffi-dev openssl-dev build-base zlib zlib-dev openssl-dev git openssh && \
-    pip install pip --upgrade && \
-    pip install -e .
-
-# ENTRYPOINT ["python", "main.py"]
+ENTRYPOINT ["python", "/app/src/sokodoko/main.py"]
