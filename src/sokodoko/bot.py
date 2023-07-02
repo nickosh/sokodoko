@@ -52,6 +52,13 @@ async def parse(message: Message):
     await bot.reply_to(message, answer_msg)
 
 
+# Folium map
+@server.route("/", methods=["GET"])
+def map_render():
+    m = folium.Map()
+    return m.get_root().render()
+
+
 # Webserver
 @server.route(f"/wh{BOT_TOKEN}", methods=["POST"])
 async def webhook(request: Request) -> JSONResponse:
