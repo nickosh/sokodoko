@@ -1,5 +1,6 @@
 from configparser import ConfigParser, SectionProxy
 from pathlib import Path
+from tinydb import TinyDB
 
 from logger import LoggerHandler
 
@@ -9,6 +10,11 @@ log: LoggerHandler = LoggerHandler(__name__)
 workdir: Path = Path(__file__).resolve().parents[0]
 datadir: Path = Path(workdir, "data")
 datadir.mkdir(exist_ok=True)
+
+db: TinyDB = TinyDB(
+    Path(datadir, "maps.json"), sort_keys=True, indent=4, separators=(",", ": ")
+)
+
 
 def config_init() -> tuple[ConfigParser, Path]:
     config: ConfigParser = ConfigParser()
@@ -33,6 +39,7 @@ def config_load(config: ConfigParser) -> SectionProxy:
 def config_save():
     with config_path.open("w") as configfile:
         config.write(configfile)
+
 
 config, config_path = config_init()
 cfg_bot = config_load(config)

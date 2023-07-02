@@ -10,6 +10,8 @@ from sanic_ext import Extend
 
 from sokodoko.config import BOT_ADMIN, BOT_TOKEN, WEB_HOST
 from sokodoko.logger import LoggerHandler
+from sokodoko.db import Map
+import folium
 
 hashtag_pattern = r"(#\w+)"
 google_maps_pattern = r"(https?://)?(www\.)?((google\.com/maps/)|(maps\.google\.com/)|(goo\.gl/maps/)|(maps\.app\.goo\.gl/))[^\s]+"
@@ -22,9 +24,10 @@ log: LoggerHandler = LoggerHandler(__name__)
 Extend(server)
 server.config.LOGGING = True
 
+
 # Telegram bot
 @bot.message_handler(regexp=google_maps_pattern)
-async def start(message:Message):
+async def parse(message: Message):
     text: Optional[str] = message.text
     if not text:
         return
@@ -36,8 +39,18 @@ async def start(message:Message):
     comment = re.sub(google_maps_pattern, "", comment)
     comment = comment.strip()
 
+    tg_map = Map(message.chat.id)
+    tg_points = tg_map.get_points()
+    point = [point for point in tg_points if point['url'] == map_url][0]
+    if not point:
+        point = {"url": "map_url", "tags": [*tags], "comments": [comment]}
+    else:
+        point['tags'].extend(tags)
+        point['comments'].append(comment)
+
     answer_msg: str = f"Thank you, dear {message.from_user.full_name}\n\nGoogle Maps link: {map_url}\n\nTags: {tags}\n\nCommentary:\n{comment}"
     await bot.reply_to(message, answer_msg)
+
 
 # Webserver
 @server.route(f"/wh{BOT_TOKEN}", methods=["POST"])
