@@ -7,7 +7,7 @@ from logger import LoggerHandler
 log: LoggerHandler = LoggerHandler(__name__)
 
 
-workdir: Path = Path(__file__).resolve().parents[0]
+workdir: Path = Path(__file__).resolve().parents[2]
 datadir: Path = Path(workdir, "data")
 datadir.mkdir(exist_ok=True)
 

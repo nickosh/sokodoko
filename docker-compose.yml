@@ -10,6 +10,9 @@ services:
         - "traefik.http.routers.sokodoko.tls=true"
         - "traefik.http.routers.sokodoko.tls.certresolver=letsencryptresolver"
         - "traefik.http.services.sokodoko.loadbalancer.server.port=80"
+        volumes:
+        - "/opt/docker/sokodoko/data:/app/data"
+        - "/var/run/docker.sock:/var/run/docker.sock:ro"
         networks:
         - web
 
