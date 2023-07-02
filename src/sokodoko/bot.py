@@ -44,9 +44,12 @@ async def parse(message: Message):
     point_exist: bool = False
     for point in tg_points:
         if point['url'] == map_url:
-            point['tags'].extend(tags)
-            point['comments'].append(comment)
             point_exist = True
+            for tag in tags:
+                if tag not in point['tags']:
+                    point['tags'].append(tag)
+            if comment not in point['comments']:
+                point['comments'].append(comment)
             break
     if not point_exist:
         point = {"url": map_url, "tags": [*tags], "comments": [comment]}
