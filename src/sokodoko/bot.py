@@ -1,7 +1,7 @@
 from sanic import Sanic
 from telebot.types import Update, Message
 from telebot.async_telebot import AsyncTeleBot
-from sanic.response import json, JSONResponse
+from sanic.response import json, JSONResponse, html
 from sanic.request import Request
 from typing import Optional
 from urllib.parse import quote
@@ -41,12 +41,17 @@ async def parse(message: Message):
 
     tg_map = Map(message.chat.id)
     tg_points = tg_map.get_points()
-    point = [point for point in tg_points if point['url'] == map_url][0]
-    if not point:
-        point = {"url": "map_url", "tags": [*tags], "comments": [comment]}
-    else:
-        point['tags'].extend(tags)
-        point['comments'].append(comment)
+    point_exist: bool = False
+    for point in tg_points:
+        if point['url'] == map_url:
+            point['tags'].extend(tags)
+            point['comments'].append(comment)
+            point_exist = True
+            break
+    if not point_exist:
+        point = {"url": map_url, "tags": [*tags], "comments": [comment]}
+        tg_points.append(point)
+    tg_map.add_points(tg_points)
 
     answer_msg: str = f"Thank you, dear {message.from_user.full_name}\n\nGoogle Maps link: {map_url}\n\nTags: {tags}\n\nCommentary:\n{comment}"
     await bot.reply_to(message, answer_msg)
@@ -54,9 +59,10 @@ async def parse(message: Message):
 
 # Folium map
 @server.route("/", methods=["GET"])
-def map_render():
+def map_render(request: Request):
     m = folium.Map()
-    return m.get_root().render()
+    render = m.get_root().render()
+    return html(render)
 
 
 # Webserver
