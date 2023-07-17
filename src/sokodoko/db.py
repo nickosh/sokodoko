@@ -2,7 +2,7 @@ from sokodoko.config import db
 from secrets import token_urlsafe
 from datetime import datetime
 from tinydb import Query
-from typing import List
+from typing import List, Optional
 
 from logger import LoggerHandler
 
@@ -10,15 +10,16 @@ log: LoggerHandler = LoggerHandler(__name__)
 
 
 class MapDB:
-    def __init__(self, tg_group: int, map_info: dict) -> None:
+    def __init__(self, tg_group: int, map_info: Optional[dict] = None) -> None:
         self.tg_group: int = tg_group
         self.db: dict = self.get_map(tg_group, map_info)
 
-    def get_map(self, tg_group: int, map_info: dict) -> dict:
+    def get_map(self, tg_group: int, map_info: Optional[dict] = None) -> dict:
         Map = Query()
         map_db = db.search(Map.tg_group == tg_group)
         if map_db:
             return map_db[0]
+        assert map_info, "Will create new map, no info provided"
         db.insert(
             {
                 'tg_group': tg_group,

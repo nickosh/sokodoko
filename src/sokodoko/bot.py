@@ -41,7 +41,7 @@ async def parse(message: Message):
     tags = re.findall(hashtag_pattern, text)
 
     map_url = re.search(google_maps_pattern, text)
-    assert map_url
+    assert map_url, "No Google Map pattern was found in url!"
     map_url = get_final_url(map_url.group())
     parsed_url = urlparse(map_url)
     path_components = parsed_url.path.split("/")
