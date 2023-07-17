@@ -33,6 +33,36 @@ def get_final_url(url):
     return response.url
 
 
+def extract_place_name(url):
+    parsed_url = urlparse(url)
+    path_components = parsed_url.path.split("/")
+
+    place = None
+    if "place" in path_components:
+        place_index = path_components.index("place") + 1
+        if place_index < len(path_components):
+            place = unquote(path_components[place_index]).replace("+", " ")
+    return place
+
+
+def extract_lat_long(url):
+    # Define the regular expression pattern
+    pattern = r'@(-?\d+\.\d+),(-?\d+\.\d+)'
+
+    # Search for the pattern in the URL
+    match = re.search(pattern, url)
+
+    if match:
+        # Extract latitude and longitude values
+        latitude = float(match.group(1))
+        longitude = float(match.group(2))
+
+        return latitude, longitude
+    else:
+        # Pattern not found in the URL
+        return None, None
+
+
 @bot.message_handler(regexp=google_maps_pattern)
 async def parse(message: Message):
     text: Optional[str] = message.text
@@ -45,30 +75,15 @@ async def parse(message: Message):
         log.error("No Google Map pattern was found in url!")
     map_url = get_final_url(map_url.group())
     log.debug(f"Expanded link is: {map_url}")
-    parsed_url = urlparse(map_url)
-    path_components = parsed_url.path.split("/")
 
-    place = None
-    if "place" in path_components:
-        place_index = path_components.index("place") + 1
-        if place_index < len(path_components):
-            place = unquote(path_components[place_index]).replace("+", " ")
-    else:
+    place = extract_place_name(map_url)
+    latitude, longitude = extract_lat_long(map_url)
+    if not place or not latitude or not longitude:
         answer_msg: str = (
             "Seems like your GMaps link is incorrect and do not lead to place"
         )
         await bot.reply_to(message, answer_msg)
         return
-
-    latitude, longitude = None, None
-    if "@" in path_components:
-        coordinates_index = path_components.index(
-            [i for i in path_components if "@" in i][0]
-        )
-        if coordinates_index < len(path_components):
-            coordinates = path_components[coordinates_index].split(",")[1:3]
-            if len(coordinates) == 2:
-                latitude, longitude = map(float, coordinates)
 
     comment = re.sub(hashtag_pattern, "", text)
     comment = re.sub(google_maps_pattern, "", comment)
