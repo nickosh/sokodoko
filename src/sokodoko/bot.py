@@ -8,10 +8,11 @@ from urllib.parse import quote
 import re
 from sanic_ext import Extend
 import requests
+from urllib.parse import urlparse, unquote
 
 from sokodoko.config import BOT_ADMIN, BOT_TOKEN, WEB_HOST
 from sokodoko.logger import LoggerHandler
-from sokodoko.db import Map
+from sokodoko.db import MapDB
 import folium
 
 hashtag_pattern = r"(#\w+)"
@@ -38,15 +39,37 @@ async def parse(message: Message):
     if not text:
         return
     tags = re.findall(hashtag_pattern, text)
+
     map_url = re.search(google_maps_pattern, text)
-    if map_url:
-        map_url = get_final_url(map_url.group())
+    assert map_url
+    map_url = get_final_url(map_url.group())
+    parsed_url = urlparse(map_url)
+    path_components = parsed_url.path.split("/")
+
+    place = None
+    if "place" in path_components:
+        place_index = path_components.index("place") + 1
+        if place_index < len(path_components):
+            place = unquote(path_components[place_index]).replace("+", " ")
+
+    latitude, longitude = None, None
+    if "@" in path_components:
+        coordinates_index = path_components.index(
+            [i for i in path_components if "@" in i][0]
+        )
+        if coordinates_index < len(path_components):
+            coordinates = path_components[coordinates_index].split(",")[1:3]
+            if len(coordinates) == 2:
+                latitude, longitude = map(float, coordinates)
+
     comment = re.sub(hashtag_pattern, "", text)
     comment = re.sub(google_maps_pattern, "", comment)
     comment = comment.strip()
 
-    tg_map = Map(message.chat.id)
-    tg_points = tg_map.get_points()
+    tg_map_db = MapDB(
+        message.chat.id, {"place": place, "lat": latitude, "long": longitude}
+    )
+    tg_points = tg_map_db.get_points()
     point_exist: bool = False
     for point in tg_points:
         if point['url'] == map_url:
@@ -60,7 +83,7 @@ async def parse(message: Message):
     if not point_exist:
         point = {"url": map_url, "tags": [*tags], "comments": [comment]}
         tg_points.append(point)
-    tg_map.add_points(tg_points)
+    tg_map_db.add_points(tg_points)
 
     answer_msg: str = f"Thank you, dear {message.from_user.full_name}\n\nGoogle Maps link: {map_url}\n\nTags: {tags}\n\nCommentary:\n{comment}"
     await bot.reply_to(message, answer_msg)
