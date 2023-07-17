@@ -7,6 +7,7 @@ from typing import Optional
 from urllib.parse import quote
 import re
 from sanic_ext import Extend
+import requests
 
 from sokodoko.config import BOT_ADMIN, BOT_TOKEN, WEB_HOST
 from sokodoko.logger import LoggerHandler
@@ -26,6 +27,11 @@ server.config.LOGGING = True
 
 
 # Telegram bot
+def get_final_url(url):
+    response = requests.head(url, allow_redirects=True)
+    return response.url
+
+
 @bot.message_handler(regexp=google_maps_pattern)
 async def parse(message: Message):
     text: Optional[str] = message.text
@@ -34,7 +40,7 @@ async def parse(message: Message):
     tags = re.findall(hashtag_pattern, text)
     map_url = re.search(google_maps_pattern, text)
     if map_url:
-        map_url = map_url.group()
+        map_url = get_final_url(map_url.group())
     comment = re.sub(hashtag_pattern, "", text)
     comment = re.sub(google_maps_pattern, "", comment)
     comment = comment.strip()
