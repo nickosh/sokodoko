@@ -19,7 +19,8 @@ class MapDB:
         map_db = db.search(Map.tg_group == tg_group)
         if map_db:
             return map_db[0]
-        assert map_info, "Will create new map, no info provided"
+        if not map_info:
+            log.error("Will create new map, no info provided")
         db.insert(
             {
                 'tg_group': tg_group,

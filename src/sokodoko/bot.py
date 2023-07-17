@@ -41,8 +41,10 @@ async def parse(message: Message):
     tags = re.findall(hashtag_pattern, text)
 
     map_url = re.search(google_maps_pattern, text)
-    assert map_url, "No Google Map pattern was found in url!"
+    if not map_url:
+        log.error("No Google Map pattern was found in url!")
     map_url = get_final_url(map_url.group())
+    log.debug(f"Expanded link is: {map_url}")
     parsed_url = urlparse(map_url)
     path_components = parsed_url.path.split("/")
 
@@ -51,6 +53,12 @@ async def parse(message: Message):
         place_index = path_components.index("place") + 1
         if place_index < len(path_components):
             place = unquote(path_components[place_index]).replace("+", " ")
+    else:
+        answer_msg: str = (
+            "Seems like your GMaps link is incorrect and do not lead to place"
+        )
+        await bot.reply_to(message, answer_msg)
+        return
 
     latitude, longitude = None, None
     if "@" in path_components:
@@ -65,6 +73,8 @@ async def parse(message: Message):
     comment = re.sub(hashtag_pattern, "", text)
     comment = re.sub(google_maps_pattern, "", comment)
     comment = comment.strip()
+
+    log.debug(f"{map_url=}, {place=}, {latitude=}, {longitude=}, {comment=}, {tags=}")
 
     tg_map_db = MapDB(
         message.chat.id, {"place": place, "lat": latitude, "long": longitude}
