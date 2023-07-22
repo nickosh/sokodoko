@@ -14,6 +14,7 @@ from dataclasses import asdict
 from sokodoko.config import BOT_ADMIN, BOT_TOKEN, WEB_HOST
 from sokodoko.logger import LoggerHandler
 from sokodoko.db import MapDB, PointInfo, PointCoord
+from sokodoko.geojson import create_geojson
 import folium
 
 hashtag_pattern = r"(#\w+)"
@@ -119,6 +120,7 @@ async def parse(message: Message):
         )
         tg_points.append(asdict(point))
     tg_map_db.add_points(tg_points)
+    create_geojson(tg_map_db.url_token, tg_points)
 
     answer_msg: str = f"Thank you, dear {message.from_user.full_name}\n\nGoogle Maps link: {map_url}\n\nTags: {tags}\n\nCommentary:\n{comment}"
     await bot.reply_to(message, answer_msg)

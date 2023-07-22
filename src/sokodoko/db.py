@@ -39,11 +39,21 @@ class MapInfo:
 class MapDB:
     def __init__(self, tg_group: int, point_coord: Optional[PointCoord] = None) -> None:
         self.tg_group: int = tg_group
-        self.db: dict = self.get_map(tg_group, point_coord)
+        self.db: dict = self._get_map(point_coord)
+        assert self.db, "DB no found and new one not created!"
+        self.url_token = self.db["url_token"]
 
-    def get_map(self, tg_group: int, point_coord: Optional[PointCoord] = None) -> dict:
+    @property
+    def points(self) -> list[dict]:
+        self.sync()
+        return self.db['points']
+
+    def sync(self) -> None:
+        self.db = self._get_map()
+
+    def _get_map(self, point_coord: Optional[PointCoord] = None) -> dict:
         Map = Query()
-        map_db = db.search(Map.tg_group == tg_group)
+        map_db = db.search(Map.tg_group == self.tg_group)
         if map_db:
             return map_db[0]
         # No map found in DB, let's create new one
@@ -52,7 +62,7 @@ class MapDB:
         db.insert(
             asdict(
                 MapInfo(
-                    tg_group=tg_group,
+                    tg_group=self.tg_group,
                     url_token=token_urlsafe(10),
                     lang="en",
                     init_coords=point_coord,
@@ -60,7 +70,7 @@ class MapDB:
                 )
             )
         )
-        return db.search(Map.tg_group == tg_group)[0]
+        return db.search(Map.tg_group == self.tg_group)[0]
 
     def add_points(self, points: List[dict]) -> None:
         Map = Query()
@@ -68,8 +78,4 @@ class MapDB:
             {'points': points, 'update_date': str(datetime.now())},
             Map.tg_group == self.tg_group,
         )
-        self.get_points()
-
-    def get_points(self) -> list[dict]:
-        self.db = self.get_map(self.tg_group)
-        return self.db['points']
+        self.sync()
