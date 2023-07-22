@@ -139,12 +139,20 @@ async def map_url(message: Message):
 # Folium map
 @server.route("/<url_token>", methods=["GET"])
 async def map_render(request: Request, url_token: str):
+    def create_popup(feature):
+        return folium.Popup(
+            f'<strong>{feature["properties"]["name"]}</strong><br /><p><a href="{feature["properties"]["url"]}" target="_blank">{feature["properties"]["name"]}</a></p><p>Tags: {feature["properties"]["tags"]}</p><br /><p>Comments: {feature["properties"]["comments"]}</p>'
+        )
+
     location: PointCoord = location_from_token(url_token)
     geojson_file = Path(datadir, f"{url_token}.json")
-    map = folium.Map(location=[location.lat, location.long], zoom_start=12)
+    map = folium.Map(location=[location.long, location.lat], zoom_start=12)
     folium.GeoJson(
         data=geojson_file.open("r", encoding="utf-8-sig").read(),
-        tooltip=folium.features.GeoJsonTooltip(fields=['name', 'description']),
+        popup=folium.features.GeoJsonPopup(
+            fields=['name', 'url', 'tags', 'comments'], aliases=['', ''], labels=False
+        ),
+        tooltip=folium.features.GeoJsonTooltip(fields=['name', 'tags']),
     ).add_to(map)
     render = map.get_root().render()
     return html(render)

@@ -20,7 +20,6 @@ def create_geojson(token: str, points: list):
         comments: str = "".join(
             ['<p>' + string + '</p>' for string in point_info.comments]
         )
-        desc: str = f'<p>{point_info.url}</p><p>{point_info.tags}</p><br />{comments}'
         feature_dict: dict = {
             "type": "Feature",
             "geometry": {
@@ -29,7 +28,9 @@ def create_geojson(token: str, points: list):
             },
             "properties": {
                 "name": point_info.place,
-                "description": desc,
+                "url": point_info.url,
+                "tags": point_info.tags,
+                "comments": comments,
             },
         }
         features.append(feature_dict)
