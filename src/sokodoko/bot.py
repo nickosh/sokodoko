@@ -127,7 +127,7 @@ async def parse(message: Message):
     await bot.reply_to(message, answer_msg)
 
 
-@bot.message_handler(commands=['sokodoko_url'])
+@bot.message_handler(commands=['sokodoko'])
 async def map_url(message: Message):
     tg_map_db = MapDB(message.chat.id)
     answer_msg: str = (
@@ -150,7 +150,9 @@ async def map_render(request: Request, url_token: str):
     folium.GeoJson(
         data=geojson_file.open("r", encoding="utf-8-sig").read(),
         popup=folium.features.GeoJsonPopup(
-            fields=['name', 'url', 'tags', 'comments'], aliases=['', ''], labels=False
+            fields=['name', 'url', 'tags', 'comments'],
+            aliases=['', '', '', ''],
+            labels=False,
         ),
         tooltip=folium.features.GeoJsonTooltip(fields=['name', 'tags']),
     ).add_to(map)
