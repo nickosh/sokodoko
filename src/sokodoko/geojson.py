@@ -20,20 +20,20 @@ def create_geojson(token: str, points: list):
         comments: str = "".join(
             ['<p>' + string + '</p>' for string in point_info.comments]
         )
-        desc: str = f'<strong>{point_info.place}</strong><br /><p>{point_info.url}</p><p>{point_info.tags}</p><br />{comments}'
+        desc: str = f'<p>{point_info.url}</p><p>{point_info.tags}</p><br />{comments}'
         feature_dict: dict = {
-            'type': 'Feature',
-            'properties': {'description': desc},
-            'geometry': {
-                'type': 'Point',
-                'coordinates': [point_info.coords.lat, point_info.coords.long],
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [point_info.coords.lat, point_info.coords.long],
+            },
+            "properties": {
+                "name": point_info.place,
+                "description": desc,
             },
         }
         features.append(feature_dict)
 
-        geojson_dict: dict = {
-            'type': 'geojson',
-            'data': {'type': 'FeatureCollection', 'features': features},
-        }
+        geojson_dict: dict = {"type": "FeatureCollection", "features": features}
         with Path(datadir, f"{token}.json").open("w") as file:
             json.dump(geojson_dict, file)

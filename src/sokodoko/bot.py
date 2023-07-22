@@ -138,11 +138,14 @@ async def map_url(message: Message):
 
 # Folium map
 @server.route("/<url_token>", methods=["GET"])
-def map_render(request: Request, url_token: str):
+async def map_render(request: Request, url_token: str):
     location: PointCoord = location_from_token(url_token)
     geojson_file = Path(datadir, f"{url_token}.json")
     map = folium.Map(location=[location.lat, location.long], zoom_start=12)
-    folium.GeoJson(data=geojson_file.read_text()).add_to(map)
+    folium.GeoJson(
+        data=geojson_file.open("r", encoding="utf-8-sig").read(),
+        tooltip=folium.features.GeoJsonTooltip(fields=['name', 'description']),
+    ).add_to(map)
     render = map.get_root().render()
     return html(render)
 
