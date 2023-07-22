@@ -10,10 +10,11 @@ from sanic_ext import Extend
 import requests
 from urllib.parse import urlparse, unquote
 from dataclasses import asdict
+from pathlib import Path
 
-from sokodoko.config import BOT_ADMIN, BOT_TOKEN, WEB_HOST
+from sokodoko.config import BOT_ADMIN, BOT_TOKEN, WEB_HOST, datadir
 from sokodoko.logger import LoggerHandler
-from sokodoko.db import MapDB, PointInfo, PointCoord
+from sokodoko.db import MapDB, PointInfo, PointCoord, location_from_token
 from sokodoko.geojson import create_geojson
 import folium
 
@@ -126,11 +127,23 @@ async def parse(message: Message):
     await bot.reply_to(message, answer_msg)
 
 
+@bot.message_handler(commands=['sokodoko_url'])
+async def map_url(message: Message):
+    tg_map_db = MapDB(message.chat.id)
+    answer_msg: str = (
+        f"SokoDoko map for this chat: https://{WEB_HOST}/{tg_map_db.url_token}"
+    )
+    await bot.reply_to(message, answer_msg)
+
+
 # Folium map
-@server.route("/", methods=["GET"])
-def map_render(request: Request):
-    m = folium.Map()
-    render = m.get_root().render()
+@server.route("/<url_token>", methods=["GET"])
+def map_render(request: Request, url_token: str):
+    location: PointCoord = location_from_token(url_token)
+    geojson_file = Path(datadir, f"{url_token}.json")
+    map = folium.Map(location=[location.lat, location.long], zoom_start=12)
+    folium.GeoJson(data=geojson_file.read_text()).add_to(map)
+    render = map.get_root().render()
     return html(render)
 
 

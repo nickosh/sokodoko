@@ -36,20 +36,34 @@ class MapInfo:
     update_date: str = str(datetime.now())
 
 
+def location_from_token(token: str):
+    Map = Query()
+    map_db = db.search(Map.url_token == token)
+    if map_db:
+        map_db = map_db[0]
+    location: dict = map_db["init_coords"]
+    return PointCoord(location["lat"], location["long"])
+
+
 class MapDB:
     def __init__(self, tg_group: int, point_coord: Optional[PointCoord] = None) -> None:
         self.tg_group: int = tg_group
         self.db: dict = self._get_map(point_coord)
         assert self.db, "DB no found and new one not created!"
-        self.url_token = self.db["url_token"]
+        self.sync(map_sync=False)
 
     @property
     def points(self) -> list[dict]:
         self.sync()
         return self.db['points']
 
-    def sync(self) -> None:
-        self.db = self._get_map()
+    def sync(self, map_sync: bool = True) -> None:
+        if map_sync:
+            self.db = self._get_map()
+        self.url_token: str = self.db["url_token"]
+        self.location = PointCoord(
+            self.db["init_coords"]["lat"], self.db["init_coords"]["long"]
+        )
 
     def _get_map(self, point_coord: Optional[PointCoord] = None) -> dict:
         Map = Query()
