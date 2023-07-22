@@ -89,12 +89,6 @@ async def parse(message: Message):
     comment = re.sub(google_maps_pattern, "", comment)
     comment = comment.strip()
 
-    tg_msg: Optional[str] = None
-    if message.forward_from_chat:
-        chat_id = message.forward_from_chat.id
-        message_id = message.forward_from_message_id
-        tg_msg = f"https://t.me/c/{abs(chat_id)}/{message_id}"
-
     log.debug(f"{map_url=}, {place=}, {latitude=}, {longitude=}, {comment=}, {tags=}")
 
     tg_map_db = MapDB(
@@ -110,15 +104,12 @@ async def parse(message: Message):
                     point['tags'].append(tag)
             if comment not in point['comments']:
                 point['comments'].append(comment)
-            if tg_msg not in point['tg_msgs']:
-                point['tg_msgs'].append(tg_msg)
             break
     if not point_exist:
         point = {
             "url": map_url,
             "tags": [*tags],
             "comments": [comment],
-            "tg_msgs": [tg_msg],
             "coords": {"lat": latitude, "long": longitude},
         }
         tg_points.append(point)
