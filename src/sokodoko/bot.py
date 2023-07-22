@@ -99,7 +99,7 @@ async def parse(message: Message):
 
     point_coord: PointCoord = PointCoord(lat=latitude, long=longitude)
     tg_map_db = MapDB(message.chat.id, point_coord)
-    tg_points = tg_map_db.get_points()
+    tg_points = tg_map_db.points
     point_exist: bool = False
     for point in tg_points:
         if point['url'] == map_url:
