@@ -36,14 +36,14 @@ class MapInfo:
     update_date: str = str(datetime.now())
 
 
-def location_from_token(token: str):
+def location_from_token(token: str) -> Optional[PointCoord]:
     Map = Query()
     map_db = db.search(Map.url_token == token)
     if map_db:
         map_db = map_db[0]
         location: dict = map_db.get("init_coords")
         return PointCoord(location.get("lat"), location.get("long"))
-    raise ValueError(f"Map with {token} token not found!")
+    return None
 
 
 class MapDB:

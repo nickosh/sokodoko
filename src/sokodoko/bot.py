@@ -140,6 +140,8 @@ async def map_url(message: Message):
 @server.route("/<url_token>", methods=["GET"])
 async def map_render(request: Request, url_token: str):
     location: PointCoord = location_from_token(url_token)
+    if not location:
+        return html("<p>Oops! Seems this map not exist!</p>")
     geojson_file = Path(datadir, f"{url_token}.json")
     map = folium.Map(location=[location.long, location.lat], zoom_start=12)
     folium.GeoJson(
@@ -153,6 +155,11 @@ async def map_render(request: Request, url_token: str):
     ).add_to(map)
     render = map.get_root().render()
     return html(render)
+
+
+@server.route("/", methods=["GET"])
+async def home_page(request: Request):
+    return html("<p>Hello! Here live @sokodoko_bot [https://t.me/sokodoko_bot]</p>")
 
 
 # Webserver
