@@ -9,10 +9,11 @@ import re
 from sanic_ext import Extend
 import requests
 from urllib.parse import urlparse, unquote
+from dataclasses import asdict
 
 from sokodoko.config import BOT_ADMIN, BOT_TOKEN, WEB_HOST
 from sokodoko.logger import LoggerHandler
-from sokodoko.db import MapDB
+from sokodoko.db import MapDB, PointInfo, PointCoord
 import folium
 
 hashtag_pattern = r"(#\w+)"
@@ -72,7 +73,10 @@ async def parse(message: Message):
 
     map_url = re.search(google_maps_pattern, text)
     if not map_url:
-        log.error("No Google Map pattern was found in url!")
+        answer_msg: str = "No Google Map pattern was found in url!"
+        log.error(answer_msg)
+        await bot.reply_to(message, answer_msg)
+        return
     map_url = get_final_url(map_url.group())
     log.debug(f"Expanded link is: {map_url}")
 
@@ -82,6 +86,7 @@ async def parse(message: Message):
         answer_msg: str = (
             "Seems like your GMaps link is incorrect and do not lead to place"
         )
+        log.error(answer_msg)
         await bot.reply_to(message, answer_msg)
         return
 
@@ -91,9 +96,8 @@ async def parse(message: Message):
 
     log.debug(f"{map_url=}, {place=}, {latitude=}, {longitude=}, {comment=}, {tags=}")
 
-    tg_map_db = MapDB(
-        message.chat.id, {"place": place, "lat": latitude, "long": longitude}
-    )
+    point_coord: PointCoord = PointCoord(lat=latitude, long=longitude)
+    tg_map_db = MapDB(message.chat.id, point_coord)
     tg_points = tg_map_db.get_points()
     point_exist: bool = False
     for point in tg_points:
@@ -106,13 +110,14 @@ async def parse(message: Message):
                 point['comments'].append(comment)
             break
     if not point_exist:
-        point = {
-            "url": map_url,
-            "tags": [*tags],
-            "comments": [comment],
-            "coords": {"lat": latitude, "long": longitude},
-        }
-        tg_points.append(point)
+        point = PointInfo(
+            place=place,
+            url=map_url,
+            tags=[*tags],
+            comments=[comment],
+            coords=point_coord,
+        )
+        tg_points.append(asdict(point))
     tg_map_db.add_points(tg_points)
 
     answer_msg: str = f"Thank you, dear {message.from_user.full_name}\n\nGoogle Maps link: {map_url}\n\nTags: {tags}\n\nCommentary:\n{comment}"
