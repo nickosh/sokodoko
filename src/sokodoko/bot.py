@@ -57,8 +57,8 @@ def extract_lat_long(url):
 
     if match:
         # Extract latitude and longitude values
-        latitude = float(match.group(1))
-        longitude = float(match.group(2))
+        latitude = float(match.group(2))
+        longitude = float(match.group(1))
 
         return latitude, longitude
     else:
@@ -107,16 +107,16 @@ async def parse(message: Message):
             point_exist = True
             for tag in tags:
                 if tag not in point['tags']:
-                    point['tags'].append(tag)
+                    point['tags'].append(re.sub('[^a-zA-Z0-9 \n\.]', '', tag))
             if comment not in point['comments']:
-                point['comments'].append(comment)
+                point['comments'].append(re.sub('[^a-zA-Z0-9 \n\.]', '', comment))
             break
     if not point_exist:
         point = PointInfo(
-            place=place,
+            place=re.sub('[^a-zA-Z0-9 \n\.]', '', place),
             url=map_url,
             tags=[*tags],
-            comments=[comment],
+            comments=[re.sub('[^a-zA-Z0-9 \n\.]', '', comment)],
             coords=point_coord,
         )
         tg_points.append(asdict(point))
@@ -139,11 +139,6 @@ async def map_url(message: Message):
 # Folium map
 @server.route("/<url_token>", methods=["GET"])
 async def map_render(request: Request, url_token: str):
-    def create_popup(feature):
-        return folium.Popup(
-            f'<strong>{feature["properties"]["name"]}</strong><br /><p><a href="{feature["properties"]["url"]}" target="_blank">{feature["properties"]["name"]}</a></p><p>Tags: {feature["properties"]["tags"]}</p><br /><p>Comments: {feature["properties"]["comments"]}</p>'
-        )
-
     location: PointCoord = location_from_token(url_token)
     geojson_file = Path(datadir, f"{url_token}.json")
     map = folium.Map(location=[location.long, location.lat], zoom_start=12)
