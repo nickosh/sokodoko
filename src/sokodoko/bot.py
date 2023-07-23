@@ -94,7 +94,7 @@ async def parse(message: Message):
     place = str_clean(extract_place_name(map_url))
     latitude, longitude = extract_lat_long(map_url)
     if not place or not latitude or not longitude:
-        answer_msg: str = "Sorry, right now I understand only links whick looks like google.com/maps/place/*\nPlease try again."
+        answer_msg: str = "Sorry, right now I only understand links that look like google.com/maps/place/*\nPlease try again with a different link."
         log.error(answer_msg)
         await bot.reply_to(message, answer_msg)
         return
@@ -131,7 +131,7 @@ async def parse(message: Message):
     tg_map_db.add_points(tg_points)
     create_geojson(tg_map_db.url_token, tg_points)
 
-    answer_msg: str = f"Thank you, dear {message.from_user.full_name}! Point is saved!\n\nPlace name: {place}\nCoordinates: {latitude}, {longitude}\nTags: {tags}\nGoogle Maps link: {map_url}\nCommentary:\n{comment}\n\nCheck it on map: https://{WEB_HOST}/{tg_map_db.url_token}"
+    answer_msg: str = f"Thank you, dear {message.from_user.full_name}! Point is saved!\n\nPlace name: {place}\nCoordinates: {latitude}, {longitude}\nTags: {tags}\nGoogle Maps link: {map_url}\nCommentary:\n{comment}\n\nCheck point collection here: https://{WEB_HOST}/{tg_map_db.url_token}"
     await bot.reply_to(message, answer_msg)
 
 
@@ -139,7 +139,7 @@ async def parse(message: Message):
 async def map_url(message: Message):
     tg_map_db = MapDB(message.chat.id)
     answer_msg: str = (
-        f"SokoDoko map for this chat: https://{WEB_HOST}/{tg_map_db.url_token}"
+        f"View the SokoDoko map for this chat: https://{WEB_HOST}/{tg_map_db.url_token}"
     )
     await bot.reply_to(message, answer_msg)
 
@@ -149,11 +149,12 @@ async def send_welcome(message):
     await bot.reply_to(
         message,
         """\
-こんにちはございます, I am SokoDoko bot.
-When you invite me to the chat I will collect all links which lead to map points and then will show your point collection on map.
-You can send links directly to me as well. So far I understand only links which looks like google.com/maps/place/*.
+こんにちはございます, I am SokoDoko bot. Your humble map helper!
 
-Send command [ /sokodoko ] to the chat and I will give you link where you can see the map with your point collection. Click on any point and you will see popup with additional information.
+If you invite me to chat, I will collect all the links that lead to map points, and then display your point collection on the map.
+You can also send me links directly. So far I only understand links that look like google.com/maps/place/*.
+
+Send the command [ /sokodoko ] in chat and I will give you a link where you can see the map with your point collection. Open the map, click on any point and you will see a popup with additional information.
 \
 """,
     )
