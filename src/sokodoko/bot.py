@@ -68,7 +68,7 @@ def extract_lat_long(url):
 
 def str_clean(input_string: str):
     # This regex will match any character that is not a letter, number, or space
-    pattern = re.compile(r'[^a-zA-Z0-9 ]')
+    pattern = re.compile(r'[^a-zA-Z0-9 \nа-яА-ЯёЁ.]')
     # Substituting the matched characters with nothing
     string = input_string.replace("\n", " ").strip()
     return pattern.sub('', string)
