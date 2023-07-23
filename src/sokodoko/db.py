@@ -21,8 +21,8 @@ class PointInfo:
     place: str
     coords: PointCoord
     url: str
-    tags: list
-    comments: list
+    tags: List[str]
+    comments: List[str]
 
 
 @dataclass

@@ -8,6 +8,9 @@ log: LoggerHandler = LoggerHandler(__name__)
 
 
 def create_geojson(token: str, points: list):
+    def add_linebreaks(string, n):
+        return '\n'.join(string[i : i + n] for i in range(0, len(string), n))
+
     features: list = []
     for point in points:
         point_info: PointInfo = PointInfo(
@@ -18,7 +21,10 @@ def create_geojson(token: str, points: list):
             point.get("comments"),
         )
         comments: str = "".join(
-            ['<p>' + string + '</p>' for string in point_info.comments]
+            [
+                '<p>' + add_linebreaks(string.replace("\n", " "), 55) + '</p>'
+                for string in point_info.comments
+            ]
         )
         feature_dict: dict = {
             "type": "Feature",
@@ -27,9 +33,9 @@ def create_geojson(token: str, points: list):
                 "coordinates": [point_info.coords.lat, point_info.coords.long],
             },
             "properties": {
-                "name": point_info.place,
-                "url": point_info.url,
-                "tags": point_info.tags,
+                "name": f'<strong>{point_info.place}</strong>',
+                "url": f'<a href="{point_info.url}" target="_blank">See on Google Maps</a>',
+                "tags": f'Tags: {point_info.tags}',
                 "comments": comments,
             },
         }

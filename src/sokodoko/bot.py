@@ -65,6 +65,11 @@ def extract_lat_long(url):
         # Pattern not found in the URL
         return None, None
 
+def str_clean(input_string):
+    # This regex will match any character that is not a letter, number, or space
+    pattern = re.compile(r'[^a-zA-Z0-9 ]')
+    # Substituting the matched characters with nothing
+    return pattern.sub('', input_string)
 
 @bot.message_handler(regexp=google_maps_pattern)
 async def parse(message: Message):
@@ -72,6 +77,7 @@ async def parse(message: Message):
     if not text:
         return
     tags = re.findall(hashtag_pattern, text)
+    tags = [str_clean(tag) for tag in tags]
 
     map_url = re.search(google_maps_pattern, text)
     if not map_url:
@@ -82,11 +88,11 @@ async def parse(message: Message):
     map_url = get_final_url(map_url.group())
     log.debug(f"Expanded link is: {map_url}")
 
-    place = extract_place_name(map_url)
+    place = str_clean(extract_place_name(map_url))
     latitude, longitude = extract_lat_long(map_url)
     if not place or not latitude or not longitude:
         answer_msg: str = (
-            "Seems like your GMaps link is incorrect and do not lead to place"
+            "Sorry, right now I understand only links whick looks like google.com/maps/place/*\nPlease try again."
         )
         log.error(answer_msg)
         await bot.reply_to(message, answer_msg)
@@ -94,7 +100,7 @@ async def parse(message: Message):
 
     comment = re.sub(hashtag_pattern, "", text)
     comment = re.sub(google_maps_pattern, "", comment)
-    comment = comment.strip()
+    comment = f'{str_clean(message.from_user.full_name)}: {str_clean(comment.strip())}'
 
     log.debug(f"{map_url=}, {place=}, {latitude=}, {longitude=}, {comment=}, {tags=}")
 
@@ -107,23 +113,23 @@ async def parse(message: Message):
             point_exist = True
             for tag in tags:
                 if tag not in point['tags']:
-                    point['tags'].append(re.sub('[^a-zA-Z0-9 \n\.]', '', tag))
+                    point['tags'].append(tag)
             if comment not in point['comments']:
-                point['comments'].append(re.sub('[^a-zA-Z0-9 \n\.]', '', comment))
+                point['comments'].append(comment)
             break
     if not point_exist:
         point = PointInfo(
-            place=re.sub('[^a-zA-Z0-9 \n\.]', '', place),
+            place=place,
             url=map_url,
             tags=[*tags],
-            comments=[re.sub('[^a-zA-Z0-9 \n\.]', '', comment)],
+            comments=[comment],
             coords=point_coord,
         )
         tg_points.append(asdict(point))
     tg_map_db.add_points(tg_points)
     create_geojson(tg_map_db.url_token, tg_points)
 
-    answer_msg: str = f"Thank you, dear {message.from_user.full_name}\n\nGoogle Maps link: {map_url}\n\nTags: {tags}\n\nCommentary:\n{comment}"
+    answer_msg: str = f"Thank you, dear {message.from_user.full_name}! Point is saved!\n\nPlace name: {place}\nCoordinates: {latitude}, {longitude}\nTags: {tags}\nGoogle Maps link: {map_url}\nCommentary:\n{comment}\n\nCheck it on map: https://{WEB_HOST}/{tg_map_db.url_token}"
     await bot.reply_to(message, answer_msg)
 
 
@@ -135,6 +141,16 @@ async def map_url(message: Message):
     )
     await bot.reply_to(message, answer_msg)
 
+@bot.message_handler(commands=['help', 'start'])
+async def send_welcome(message):
+    await bot.reply_to(message, """\
+こんにちはございます, I am SokoDoko bot.
+When you invite me to the chat I will collect all links which lead to map points and then will show your point collection on map.
+You can send links directly to me as well. So far I understand only links which looks like google.com/maps/place/*.
+
+Send command [ /sokodoko ] to the chat and I will give you link where you can see the map with your point collection. Click on any point and you will see popup with additional information.
+\
+""")
 
 # Folium map
 @server.route("/<url_token>", methods=["GET"])
@@ -159,7 +175,7 @@ async def map_render(request: Request, url_token: str):
 
 @server.route("/", methods=["GET"])
 async def home_page(request: Request):
-    return html("<p>Hello! Here live @sokodoko_bot [https://t.me/sokodoko_bot]</p>")
+    return html("<p>Hello! Here live the <a href="https://t.me/sokodoko_bot">@sokodoko_bot</a>.</p>")
 
 
 # Webserver
