@@ -66,11 +66,12 @@ def extract_lat_long(url):
         return None, None
 
 
-def str_clean(input_string):
+def str_clean(input_string: str):
     # This regex will match any character that is not a letter, number, or space
     pattern = re.compile(r'[^a-zA-Z0-9 ]')
     # Substituting the matched characters with nothing
-    return pattern.sub('', input_string)
+    string = input_string.replace("\n", " ").strip()
+    return pattern.sub('', string)
 
 
 @bot.message_handler(regexp=google_maps_pattern)
@@ -100,7 +101,8 @@ async def parse(message: Message):
 
     comment = re.sub(hashtag_pattern, "", text)
     comment = re.sub(google_maps_pattern, "", comment)
-    comment = f'{str_clean(message.from_user.full_name)}: {str_clean(comment.strip())}'
+    comment = str_clean(comment)
+    comment = f"[{str_clean(message.from_user.full_name)}]: {comment}"
 
     log.debug(f"{map_url=}, {place=}, {latitude=}, {longitude=}, {comment=}, {tags=}")
 
