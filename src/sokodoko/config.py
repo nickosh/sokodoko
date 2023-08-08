@@ -1,6 +1,7 @@
 from configparser import ConfigParser, SectionProxy
 from pathlib import Path
 from tinydb import TinyDB
+from typing import Tuple
 
 from logger import LoggerHandler
 
@@ -16,7 +17,7 @@ db: TinyDB = TinyDB(
 )
 
 
-def config_init() -> tuple[ConfigParser, Path]:
+def config_init() -> Tuple[ConfigParser, Path]:
     config: ConfigParser = ConfigParser()
     config_path: Path = Path(workdir, "config.ini")
     print(config_path.resolve())
