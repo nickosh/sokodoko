@@ -1,4 +1,4 @@
-SokoDoko Bot
+![sokodoko_icon_32](./media/sokodoko_icon_32.png) SokoDoko Bot
 ============
 
 :star2: [Features](#star2-features) | :pushpin: [What and why](#pushpin-what-and-why) | :gear: [Run and configuration](#gear-run-and-configuration) | :spiral_notepad: [To do](#spiral\_notepad-to-do) | :scroll: [License](#scroll-license)
