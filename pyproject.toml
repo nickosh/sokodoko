@@ -19,7 +19,8 @@ dependencies = [
     "sanic ~= 23.3.0",
     "sanic-ext ~= 23.3.0",
     "tinydb ~= 4.8.0",
-    "folium ~= 0.14.0"
+    "folium ~= 0.14.0",
+    "python-decouple ~= 3.8"
 ]
 
 [project.optional-dependencies]
